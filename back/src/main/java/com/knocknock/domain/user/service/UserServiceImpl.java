@@ -2,13 +2,16 @@ package com.knocknock.domain.user.service;
 
 import com.knocknock.domain.user.dao.LogoutAccessTokenRedisRepository;
 import com.knocknock.domain.user.dao.RefreshTokenRedisRepository;
+import com.knocknock.domain.user.dao.UserQueryDslRepository;
 import com.knocknock.domain.user.dao.UserRepository;
 import com.knocknock.domain.user.domain.LogoutAccessToken;
 import com.knocknock.domain.user.domain.RefreshToken;
 import com.knocknock.domain.user.domain.Users;
 import com.knocknock.domain.user.dto.password.FindPasswordReqDto;
+import com.knocknock.domain.user.dto.password.PasswordReqDto;
 import com.knocknock.domain.user.dto.password.UpdatePasswordReqDto;
 import com.knocknock.domain.user.dto.request.*;
+import com.knocknock.domain.user.dto.request.UserSearchCondition;
 import com.knocknock.domain.user.dto.response.*;
 import com.knocknock.domain.user.exception.UserExceptionMessage;
 import com.knocknock.domain.user.exception.UserException;
@@ -38,6 +41,7 @@ public class UserServiceImpl implements UserService {
     private final JwtUtil jwtUtil;
     private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
+    private final UserQueryDslRepository userQueryDslRepository;
     private final RefreshTokenRedisRepository refreshTokenRepository;
     private final LogoutAccessTokenRedisRepository logoutAccessTokenRepository;
     private final RedisTemplate<String, Object> redisTemplate;
@@ -158,6 +162,8 @@ public class UserServiceImpl implements UserService {
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .nickname(user.getNickname())
+                .email(user.getEmail())
+                .address(user.getAddress())
                 .build();
     }
 
@@ -221,7 +227,7 @@ public class UserServiceImpl implements UserService {
         log.info("[비밀번호 찾기] 찾기 요청. email : {}, nickname : {}", email, nickname);
 
         // 우선 존재하는 회원인지 체크
-        // 존재하지 않으면 400에러 던짐
+        // 존재하지 않으면 404에러 던짐
         Users findUser = userRepository.findByEmail(email)
                 .orElseThrow(() -> {
                     log.error("[비밀번호 찾기] 존재하지 않는 회원입니다.");
@@ -270,11 +276,11 @@ public class UserServiceImpl implements UserService {
      */
     @Transactional
     @Override
-    public Boolean checkPassword(String password, String token) {
+    public Boolean checkPassword(PasswordReqDto reqDto, String token) {
         Users loginUser = getLoginUser(token);
         log.info("[비밀번호 확인] email : {}", loginUser.getEmail());
 
-        if(passwordEncoder.matches(password, loginUser.getPassword())) {
+        if(passwordEncoder.matches(reqDto.getPassword(), loginUser.getPassword())) {
             log.info("[비밀번호 확인] 비밀번호 일치! true 반환.");
             return true;
         }
@@ -365,9 +371,9 @@ public class UserServiceImpl implements UserService {
 
     @Transactional
     @Override
-    public ReissueTokenResDto reissueToken(String accessToken, String refreshToken) {
-        log.info("[토큰 재발급] 토큰 재발급 요청. accessToken : {}", accessToken);
-//        accessToken = noPrefixToken(accessToken);
+    public ReissueTokenResDto reissueToken(String refreshToken) {
+        log.info("[토큰 재발급] 토큰 재발급 요청. refreshToken : {}", refreshToken);
+        refreshToken = noPrefixToken(refreshToken);
 
         // refreshToken에서 email 가져오기
         String email = null;
@@ -389,11 +395,13 @@ public class UserServiceImpl implements UserService {
 
         if(!originRefreshToken.equals(refreshToken)) {
             log.error("[토큰 재발급] 토큰이 일치하지 않아 재발급 불가.");
+            log.error("[토큰 재발급] 현재 : {}, 기존 : {}", refreshToken, originRefreshToken);
+
             throw new TokenException("토큰 불일치.");
         }
 
         // access & refresh Token 재발급
-        accessToken = jwtUtil.generateAccessToken(email);
+        String accessToken = jwtUtil.generateAccessToken(email);
         refreshToken = jwtUtil.generateRefreshToken(email);
 
         // redis에 refreshToken 저장 필요
@@ -413,6 +421,60 @@ public class UserServiceImpl implements UserService {
                 .refreshToken(refreshToken)
                 .build();
     }
+
+//    @Transactional
+//    @Override
+//    public ReissueTokenResDto reissueToken(String accessToken, String refreshToken) {
+//        log.info("[토큰 재발급] 토큰 재발급 요청. accessToken : {}", accessToken);
+////        accessToken = noPrefixToken(accessToken);
+//        refreshToken = noPrefixToken(refreshToken);
+//
+//        // refreshToken에서 email 가져오기
+//        String email = null;
+//
+//        try {
+//            email = jwtUtil.getLoginEmail(refreshToken);
+//        } catch (Exception e) {
+//            // 리프레시 토큰 만료
+//            log.error("[토큰 재발급] 리프레시 토큰이 만료되었습니다. 재로그인 해주세요.");
+//            throw new TokenException("리프레시 토큰 만료. 재로그인 필수.");
+//        }
+//
+//        // refreshToken을 redis 레포에서 가져와서 일치 검사
+//        String originRefreshToken = refreshTokenRepository.findById(email)
+//                .orElseThrow(() -> {
+//                    log.error("[토큰 재발급] 해당 이메일에 대한 토큰이 존재하지 않습니다.");
+//                    return new NotFoundException("해당 이메일에 대한 토큰 미존재.");
+//                }).getRefreshToken();
+//
+//        if(!originRefreshToken.equals(refreshToken)) {
+//            log.error("[토큰 재발급] 토큰이 일치하지 않아 재발급 불가.");
+//            log.error("[토큰 재발급] 기존 리프레시 : {}, 현재 리프레시 : {}", refreshToken, originRefreshToken);
+//
+//            throw new TokenException("토큰 불일치.");
+//        }
+//
+//        // access & refresh Token 재발급
+//        accessToken = jwtUtil.generateAccessToken(email);
+//        refreshToken = jwtUtil.generateRefreshToken(email);
+//
+//        // redis에 refreshToken 저장 필요
+//        // 회원의 이메일 아이디를 키로 저장
+//
+//        // 기존에 저장된 리프레시 토큰 삭제
+//        refreshTokenRepository.deleteById(email);
+//
+//        refreshTokenRepository.save(RefreshToken.builder()
+//                .email(email)
+//                .refreshToken(refreshToken)
+//                .expiration(JwtExpirationEnum.REFRESH_TOKEN_EXPIRATION_TIME.getValue() / 1000)
+//                .build());
+//
+//        return ReissueTokenResDto.builder()
+//                .accessToken(accessToken)
+//                .refreshToken(refreshToken)
+//                .build();
+//    }
 
     @Transactional
     @Override
@@ -443,7 +505,7 @@ public class UserServiceImpl implements UserService {
     public List<AdminUserResDto> findUserList(String token) {
         log.info("[관리자 전용 - 전체 회원 목록 조회] 조회 요청. token : {}", token);
 
-        // 관리자 체크 -- test
+        // 관리자 체크 
         if(!jwtUtil.checkAdmin()) {
             log.error("[관리자 전용 - 전체 회원 목록 조회] 관리자 회원만 접근이 가능합니다.");
             throw new UserUnAuthorizedException(UserExceptionMessage.NO_ADMIN_USER.getMessage());
@@ -460,14 +522,19 @@ public class UserServiceImpl implements UserService {
     // 회원 검색 따로 있어야함
     @Transactional
     @Override
-    public List<AdminUserResDto> findUserByCondition(UserSearchCondition condition, String token) {
+    public List<AdminUserResDto> findUserByCondition(UserSearchCondition condition, String token) { // 테스트 해봐야함
         log.info("[관리자 전용 - 회원 검색] 회원 검색 요청. token : {}", token);
 
-
-
         // 관리자 체크
-
-        return null;
+        if(!jwtUtil.checkAdmin()) {
+            log.error("[관리자 전용 - 회원 검색] 관리자 회원만 접근이 가능합니다.");
+            throw new UserUnAuthorizedException(UserExceptionMessage.NO_ADMIN_USER.getMessage());
+        }
+        
+        log.info("[관리자 전용 - 회원 검색] 검색 완료.");
+        return userQueryDslRepository.findByCondition(condition).stream()
+                .map(users -> AdminUserResDto.entityToDto(users))
+                .collect(Collectors.toList());
     }
 
     @Transactional
@@ -475,7 +542,7 @@ public class UserServiceImpl implements UserService {
     public AdminUserResDto findUser(Long userId, String token) {
         log.info("[관리자 전용 - 회원 조회] 조회 요청. token : {}", token);
 
-        // 관리자 체크 -- 테스트해바야함
+        // 관리자 체크 
         if(!jwtUtil.checkAdmin()) {
             log.error("[관리자 전용 - 회원 조회] 관리자 회원만 접근이 가능합니다.");
             throw new UserUnAuthorizedException(UserExceptionMessage.NO_ADMIN_USER.getMessage());

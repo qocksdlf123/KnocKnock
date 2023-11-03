@@ -1,19 +1,11 @@
 package com.knocknock.global.config;
 
-import io.swagger.v3.oas.annotations.OpenAPIDefinition;
-import io.swagger.v3.oas.annotations.info.Info;
-import io.swagger.v3.oas.annotations.servers.Server;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.GroupedOpenApi;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-@OpenAPIDefinition(
-        servers = {@Server(url = "http://a508.co.kr/", description = "Default Server URL")
-                , @Server(url = "http://localhost:8083/", description = "Develop URL")},
-        info = @Info(title = "PetMeeting API 명세서",
-                description = "PetMeeting WebService API 명세서",
-                version = "v1"))
+
 @Configuration
 @RequiredArgsConstructor
 public class SwaggerConfig {
@@ -27,5 +19,25 @@ public class SwaggerConfig {
                 .pathsToMatch(paths)
                 .build();
     }
+
+//    @Bean
+//    public Docket api() {
+//        return new Docket(DocumentationType.OAS_30)
+//                .securityContexts(Arrays.asList(securityContext()))
+//                .securitySchemes(Arrays.asList(apiKey()))
+//                .select()
+//                .apis(RequestHandlerSelectors.basePackage("com.knocknock"))
+//                .paths(PathSelectors.ant("/api/**")).build();
+//
+//    }
+//
+//    // JWT SecurityContext 구성
+//    private SecurityContext securityContext() {
+//        return SecurityContext.builder()
+//                .securityReferences(defaultAuth())
+//                .build();
+//    }
+
+
 
 }

@@ -3,10 +3,7 @@ package com.knocknock.domain.user.api;
 import com.knocknock.domain.user.dto.password.FindPasswordReqDto;
 import com.knocknock.domain.user.dto.password.PasswordReqDto;
 import com.knocknock.domain.user.dto.password.UpdatePasswordReqDto;
-import com.knocknock.domain.user.dto.request.GiroCodeReqDto;
-import com.knocknock.domain.user.dto.request.LoginReqDto;
-import com.knocknock.domain.user.dto.request.UpdateUserReqDto;
-import com.knocknock.domain.user.dto.request.UserReqDto;
+import com.knocknock.domain.user.dto.request.*;
 import com.knocknock.domain.user.dto.response.AdminUserResDto;
 import com.knocknock.domain.user.dto.response.LoginResDto;
 import com.knocknock.domain.user.dto.response.ReissueTokenResDto;
@@ -14,6 +11,7 @@ import com.knocknock.domain.user.dto.response.UserResDto;
 import com.knocknock.domain.user.service.UserService;
 import com.knocknock.global.dto.MessageDto;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -28,6 +26,7 @@ import java.util.List;
 public class UserController {
 
     private final String ACCESS_TOKEN = "Authorization";
+//    private final String ACCESS_TOKEN = "accessToken"; // 스웨거용
     private final String REFRESH_TOKEN = "Refresh-Token";
     private final UserService userService;
 
@@ -85,13 +84,13 @@ public class UserController {
     }
 
     @Operation(
-            summary = "서비스 사용전 비밀번호 확인",
+            summary = "서비스 전 비밀번호 확인",
             description = "일치하면 true, 불일치하면 false를 반환합니다. " +
                     "true반환 시에만 다음 서비스를 이용할 수 있습니다."
     )
-    @GetMapping("/password")
-    public ResponseEntity<Boolean> checkPassword(@RequestParam String password, @RequestHeader(ACCESS_TOKEN) String token) {
-        return ResponseEntity.ok(userService.checkPassword(password, token));
+    @PostMapping("/password-check")
+    public ResponseEntity<Boolean> checkPassword(@RequestBody PasswordReqDto reqDto, @RequestHeader(ACCESS_TOKEN) String token) {
+        return ResponseEntity.ok(userService.checkPassword(reqDto, token));
     }
 
     @Operation(
@@ -141,9 +140,12 @@ public class UserController {
             description = "토큰을 재발급 받습니다."
     )
     @PostMapping("/reissue-token")
-    public ResponseEntity<ReissueTokenResDto> reissueToken(@RequestHeader("Authorization") String accessToken, @RequestHeader("Refresh-Token") String refreshToken) {
-        return ResponseEntity.ok(userService.reissueToken(accessToken, refreshToken));
+    public ResponseEntity<ReissueTokenResDto> reissueToken(@RequestHeader(REFRESH_TOKEN) String refreshToken) {
+        return ResponseEntity.ok(userService.reissueToken(refreshToken));
     }
+//    public ResponseEntity<ReissueTokenResDto> reissueToken(@RequestHeader(ACCESS_TOKEN) String accessToken, @RequestHeader(REFRESH_TOKEN) String refreshToken) {
+//        return ResponseEntity.ok(userService.reissueToken(accessToken, refreshToken));
+//    }
 
 
     // 여기부터 관리자
@@ -165,14 +167,14 @@ public class UserController {
         return ResponseEntity.ok(userService.findUser(userId, token));
     }
 
-//    @Operation(
-//            summary = "회원 조건별 검색",
-//            description = "관리자 회원으로 로그인하여 조건별로 회원을 검색합니다."
-//    )
-//    @GetMapping("/admin/~~~~")
-//    public ResponseEntity<List<AdminUserResDto>> findUserByCondition(@RequestParam , @RequestHeader(ACCESS_TOKEN) String token) {
-//        return ResponseEntity.ok(userService.findUserByCondition());
-//    }
+    @Operation(
+            summary = "회원 조건별 검색",
+            description = "관리자 회원으로 로그인하여 조건별로 회원을 검색합니다."
+    )
+    @GetMapping("/admin")
+    public ResponseEntity<List<AdminUserResDto>> findUserByCondition(@Parameter UserSearchCondition condition, @RequestHeader(ACCESS_TOKEN) String token) {
+        return ResponseEntity.ok(userService.findUserByCondition(condition, token));
+    }
 
     @Operation(
             summary = "회원 강제탈퇴",
