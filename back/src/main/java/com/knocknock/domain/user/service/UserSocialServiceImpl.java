@@ -6,6 +6,8 @@ import com.knocknock.domain.user.dao.UserRepository;
 import com.knocknock.domain.user.domain.RefreshToken;
 import com.knocknock.domain.user.domain.UserType;
 import com.knocknock.domain.user.domain.Users;
+import com.knocknock.domain.user.dto.request.CheckGoogleReqDto;
+import com.knocknock.domain.user.dto.request.GoogleLoginReqDto;
 import com.knocknock.domain.user.dto.request.UpdateAddressReqDto;
 import com.knocknock.domain.user.dto.response.SocialLoginResDto;
 import com.knocknock.domain.user.dto.response.UpdateAddressResDto;
@@ -21,6 +23,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.LinkedMultiValueMap;
@@ -39,6 +42,7 @@ public class UserSocialServiceImpl implements UserSocialService {
     private final RefreshTokenRedisRepository refreshTokenRepository;
     private final UserRepository userRepository;
     private final RestTemplate restTemplate = new RestTemplate();
+    private final PasswordEncoder passwordEncoder;
 
     @Transactional
     @Override
@@ -64,6 +68,65 @@ public class UserSocialServiceImpl implements UserSocialService {
                             .email(email)
                             .userType(isSocial.getValue())
                             .nickname(nickname)
+                            .build());
+                });
+//         Redis에 refreshToken 저장
+//         회원의 이메일(ID)을 키로 저장
+        saveRefreshTokenToRedis(email, refreshToken);
+
+        // Spring Security Context에 인증 정보 저장
+        authenticateUser(user);
+
+        log.info("[소셜 유저 로그인] 로그인 성공 - 이메일: {}", email);
+        return SocialLoginResDto.builder()
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .email(email)
+                .userType(isSocial.getValue())
+                .address(user.getAddress())
+                .nickname(user.getNickname())
+                .build();
+    }
+
+    @Override
+    public void checkSocialLogin(CheckGoogleReqDto checkGoogleReqDto) {
+        String email = checkGoogleReqDto.getEmail();
+        log.info("[소셜 이메일 확인] 이메일 확인 요청. {} ", email);
+
+        UserType isSocial = UserType.ROLE_SOCIAL;
+        // 이메일과 isSocial 값을 기반으로 사용자 찾기
+        Users user = userRepository.findByEmailAndUserType(email, isSocial)
+                .orElseThrow(() -> {
+                    log.error("[유저 로그인] 유저를 찾을 수 없습니다.");
+                    return new UserNotFoundException(UserExceptionMessage.USER_NOT_FOUND.getMessage());
+                });
+    }
+
+    @Override
+    public SocialLoginResDto socialFrontLogin(GoogleLoginReqDto googleLoginReqDto) {
+
+        String email = googleLoginReqDto.getEmail();
+        String nickname = googleLoginReqDto.getNickname();
+        String address = googleLoginReqDto.getAddress();
+        // 패스워드 암호화
+        String password = passwordEncoder.encode(googleLoginReqDto.getPassword());
+
+        log.info("[소셜 회원가입] 패스워드 암호화 완료.");
+
+        UserType isSocial = UserType.ROLE_SOCIAL;
+
+        String accessToken = jwtUtil.generateAccessToken(email);
+        String refreshToken = jwtUtil.generateRefreshToken(email);
+
+        // 이메일과 isSocial 값을 기반으로 사용자 찾기
+        Users user = userRepository.findByEmailAndUserType(email, isSocial)
+                .orElseGet(() -> {
+                    return userRepository.save(Users.builder()
+                            .email(email)
+                            .userType(isSocial.getValue())
+                            .nickname(nickname)
+                            .address(address)
+                            .password(password)
                             .build());
                 });
 //         Redis에 refreshToken 저장

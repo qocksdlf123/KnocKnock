@@ -1,6 +1,7 @@
 package com.knocknock.domain.model.api;
 
 import com.knocknock.domain.model.dto.request.AddMyModelReqDto;
+import com.knocknock.domain.model.dto.request.CheckModelByLabelImgReqDto;
 import com.knocknock.domain.model.dto.response.*;
 import com.knocknock.domain.model.service.LikeModelService;
 import com.knocknock.domain.model.service.ModelService;
@@ -50,6 +51,15 @@ public class ModelController {
         return ResponseEntity.ok(modelService.checkModelByModelName(modelName));
     }
 
+    @Operation(
+            summary = "가전제품 라벨 이미지에서 모델명 텍스트 추출 후 확인용 조회하기",
+            description = "가전제품 모델명으로 해당하는 모델이 존재하는지 정보를 조회합니다."
+    )
+    @PostMapping("/check-img")
+    public ResponseEntity<CheckModelResDto> checkModelByLabelImg(@RequestBody CheckModelByLabelImgReqDto checkModelByLabelImgReqDto) {
+        return ResponseEntity.ok(modelService.checkModelByLabelImg(checkModelByLabelImgReqDto));
+    }
+
 
     @Operation(
             summary = "내 가전제품 등록하기",
@@ -78,6 +88,15 @@ public class ModelController {
     @GetMapping("/my/{myModelId}")
     public ResponseEntity<FindMyModelResDto> findMyModel(@PathVariable long myModelId) {
         return ResponseEntity.ok(myModelService.findMyModel(myModelId));
+    }
+
+    @Operation(
+            summary = "등록한 내 가전제품과 비교하기?",
+            description = "등록한 내 가전제품과 가전제품을 비교합니다."
+    )
+    @GetMapping("/comparison/{modelId}/my/{myModelId}")
+    public ResponseEntity<CompareModelAndMyModelResDto> compareModelAndMyModel(@PathVariable long modelId, @PathVariable long myModelId) {
+        return ResponseEntity.ok(modelService.compareModelAndMyModel(modelId, myModelId));
     }
 
 
@@ -116,9 +135,9 @@ public class ModelController {
             summary = "가전제품 찜 취소하기",
             description = "가전제품을 찜 취소합니다."
     )
-    @DeleteMapping("/like/{likeModelId}")
-    public ResponseEntity<MessageDto> deleteLikeModel(@PathVariable long likeModelId) {
-        likeModelService.deleteLikeModel(likeModelId);
+    @DeleteMapping("/like/{modelId}")
+    public ResponseEntity<MessageDto> deleteLikeModel(@PathVariable long modelId) {
+        likeModelService.deleteLikeModel(modelId);
         return ResponseEntity.ok(MessageDto.message("가전제품 찜 취소 완료"));
     }
 

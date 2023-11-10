@@ -1,5 +1,6 @@
 package com.knocknock.domain.model.service;
 
+import com.knocknock.domain.model.constant.AwsS3ImgLink;
 import com.knocknock.domain.model.dao.ModelRepository;
 import com.knocknock.domain.model.dao.MyModelRepository;
 import com.knocknock.domain.model.domain.Model;
@@ -75,7 +76,7 @@ public class MyModelServiceImpl implements MyModelService {
 
         // 현재 로그인한 회원의 user 기본키 가져오기
         Long userId = jwtUtil.getUserNo();
-        log.info("[내 가전제품 삭제] 현재 로그인한 회원의 userId -----> {}", userId);
+        log.info("[내 가전제품 목록 조회] 현재 로그인한 회원의 userId -----> {}", userId);
         return myModelRepository.findMyModelList(userId, category);
     }
 
@@ -97,10 +98,11 @@ public class MyModelServiceImpl implements MyModelService {
                 .myModelId(myModelId)
                 .modelId(model.getId())
                 .category(model.getCategory().getName())
+                .modelNickname(myModel.getModelNickname())
                 .modelName(model.getName())
                 .modelBrand(model.getBrand())
                 .modelGrade(model.getGrade())
-                .modelImg(model.getImg())
+                .modelImg(model.getImg() == null ? null : AwsS3ImgLink.getLink(model.getName()))
                 .usage1(model.getCategory().getUsage1())
                 .usageValue1(model.getUsageValue1())
                 .usageUnit1(model.getCategory().getUsageUnit1())
