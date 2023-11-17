@@ -1,5 +1,8 @@
 package com.knocknock.domain.user.service;
 
+import com.knocknock.domain.user.constants.MetroName;
+import com.knocknock.domain.airInfo.dao.AirInfoRepository;
+import com.knocknock.domain.airInfo.domain.AirStation;
 import com.knocknock.domain.user.dao.*;
 import com.knocknock.domain.user.domain.CityCode;
 import com.knocknock.domain.user.domain.LogoutAccessToken;
@@ -16,7 +19,7 @@ import com.knocknock.domain.user.exception.UserException;
 import com.knocknock.domain.user.exception.UserNotFoundException;
 import com.knocknock.domain.user.exception.UserUnAuthorizedException;
 import com.knocknock.global.common.jwt.JwtExpirationEnum;
-import com.knocknock.global.common.kepco.KepcoAPIWebClient;
+import com.knocknock.global.common.external.kepco.KepcoAPIWebClient;
 import com.knocknock.global.exception.exception.NotFoundException;
 import com.knocknock.global.exception.exception.TokenException;
 import com.knocknock.global.util.JwtUtil;
@@ -30,8 +33,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -49,20 +51,7 @@ public class UserServiceImpl implements UserService {
     private final LogoutAccessTokenRedisRepository logoutAccessTokenRepository;
     private final RedisTemplate<String, Object> redisTemplate;
 
-//    /**
-//     * 이메일 중복 체크
-//     * 회원가입 이전에 이메일을 중복 체크합니다. --> sendEmail에서 처리
-//     * 회원가입이 가능하면(중복X) true / 불가능(중복)하면 false
-//     */
-//    @Transactional(readOnly = true)
-//    @Override
-//    public Boolean checkEmail(String email) {
-//        if(userRepository.existsByEmail(email))
-//            return false; // 이미 존재하는 이메일이면 false를 반환
-//
-//        // 회원가입 가능하면 true를 반환
-//        return true;
-//    }
+    private final AirInfoRepository airInfoRepository;
 
     /**
      * 회원가입 정보의 유효성을 확인합니다.
@@ -106,7 +95,6 @@ public class UserServiceImpl implements UserService {
             throw new UserException(UserExceptionMessage.SIGN_UP_NOT_VALID.getMessage());
         }
 
-//        log.info("[유저 회원가입] 이메일 인증 코드 발송 요청.");
         ValueOperations<String, Object> valueOperations = redisTemplate.opsForValue();
 
         // 이메일 인증 여부 확인
@@ -119,6 +107,9 @@ public class UserServiceImpl implements UserService {
         // 패스워드 암호화
         userReqDto.setPassword(passwordEncoder.encode(userReqDto.getPassword()));
         log.info("[유저 회원가입] 패스워드 암호화 완료.");
+
+        // 사용자의 주소를 이용하여 대기정보 측정소 찾아서 저장하기
+        String stationName = updateAirStation(email);
 
         Users user = userRepository.save(userReqDto.dtoToEntity());
         log.info("[유저 회원가입] 유저 생성 완료!!! 회원가입이 완료되었습니다!");
@@ -161,6 +152,9 @@ public class UserServiceImpl implements UserService {
 
         log.info("[유저 로그인] Redis 저장 완료. 로그인 성공 !! ");
 
+        log.info("[유저 로그인] 로그인은 했는데 측정소 정보가 없어서 조회할게 ~~");
+        String stationName = updateAirStation(email);
+
         return LoginResDto.builder()
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
@@ -168,6 +162,79 @@ public class UserServiceImpl implements UserService {
                 .email(user.getEmail())
                 .address(user.getAddress())
                 .build();
+    }
+
+
+    /**
+     * 회원가입 또는 정보수정 시
+     * 사용자의 주소 정보를 이용하여 가장 근접한 airStation을 찾아
+     * 유저의 airStation에 저장합니다.
+     *
+     * 만약 로그인을 했는데 측정소 정보가 없을시에도 실행됩니다.
+     */
+
+    @Transactional
+    private String updateAirStation(String email) {
+        // 로그인 유저를 가져온다.
+        Users loginUser = userRepository.findByEmail(email)
+                .orElseThrow(() -> {
+                    log.error("[대기측정소 저장] 존재하지 않는 회원입니다.");
+                    return new UserNotFoundException(UserExceptionMessage.USER_NOT_FOUND.getMessage());
+                });
+
+        log.info("[대기측정소 저장] email : {}, address : {}", loginUser.getEmail(), loginUser.getAddress());
+
+        // 유저의 주소에서 지역명을 뽑아온다.
+        String[] addressList = loginUser.getAddress().split(" ");
+        String region = addressList[0];
+        log.info("[대기측정소 저장] 유저의 지역명 : {}", region);
+
+        // 1. 지역명으로 해당 지역의 측정소 리스트 뽑아오기
+        List<AirStation> stationList = airInfoRepository.findByStationRegionContaining(region);
+
+        while(stationList.isEmpty()){
+            log.info("지역으로 못뽑았어 지역에서 한글자 빼보자");
+            region = region.substring(0, region.length() - 1);
+            log.info("지역 : {}", region);
+
+            if(region.length() == 0)
+                break;
+
+            stationList = airInfoRepository.findByStationRegionContaining(region);
+        }
+
+        if(stationList.isEmpty() || addressList.length == 1) {
+            log.error("[대기측정소 저장 임의 에러 처리로 측정소 강남으로 저장");
+            loginUser.updateAirStation("강남구");
+            userRepository.save(loginUser);
+
+            return "강남구";
+        }
+
+        AirStation station = null;
+
+        log.info("내 주소 : {}", addressList[1]);
+        // 2. 지역에 따라 체크한다
+        for(AirStation airStation : stationList) {
+            log.info("해당 지역의 측정소 중 지역세부 ; {}", airStation.getRegionDetail());
+            if(airStation.getRegionDetail().contains(addressList[1]) || addressList[1].contains(airStation.getRegionDetail())) {
+                station = airStation;
+                break;
+            }
+        }
+
+        if(station == null) {
+            log.error("[대기측정소 저장] 측정소를 못찾았어.. ");
+            station = airInfoRepository.selectOneByRegion(region);
+        }
+
+        log.info("[대기측정소 저장] 측정소 찾았어. {} ", station.getStationName());
+        loginUser.updateAirStation(station.getStationName());
+        userRepository.save(loginUser);
+
+        log.info("[대기측정소 저장] 유저한테 저장했어.");
+
+        return station.getStationName();
     }
 
     /**
@@ -339,6 +406,9 @@ public class UserServiceImpl implements UserService {
         loginUser.updateUser(updateUserReqDto.getNickname(), updateUserReqDto.getAddress(), updateUserReqDto.getGiroCode());
         userRepository.save(loginUser);
 
+        // 사용자의 주소를 이용하여 대기정보 측정소 찾아서 다시 저장하기
+        updateAirStation(loginUser.getEmail());
+
         log.info("[내 정보 수정] 정보 수정 완료.");
 
         return UserResDto.entityToDto(loginUser);
@@ -425,60 +495,6 @@ public class UserServiceImpl implements UserService {
                 .build();
     }
 
-//    @Transactional
-//    @Override
-//    public ReissueTokenResDto reissueToken(String accessToken, String refreshToken) {
-//        log.info("[토큰 재발급] 토큰 재발급 요청. accessToken : {}", accessToken);
-////        accessToken = noPrefixToken(accessToken);
-//        refreshToken = noPrefixToken(refreshToken);
-//
-//        // refreshToken에서 email 가져오기
-//        String email = null;
-//
-//        try {
-//            email = jwtUtil.getLoginEmail(refreshToken);
-//        } catch (Exception e) {
-//            // 리프레시 토큰 만료
-//            log.error("[토큰 재발급] 리프레시 토큰이 만료되었습니다. 재로그인 해주세요.");
-//            throw new TokenException("리프레시 토큰 만료. 재로그인 필수.");
-//        }
-//
-//        // refreshToken을 redis 레포에서 가져와서 일치 검사
-//        String originRefreshToken = refreshTokenRepository.findById(email)
-//                .orElseThrow(() -> {
-//                    log.error("[토큰 재발급] 해당 이메일에 대한 토큰이 존재하지 않습니다.");
-//                    return new NotFoundException("해당 이메일에 대한 토큰 미존재.");
-//                }).getRefreshToken();
-//
-//        if(!originRefreshToken.equals(refreshToken)) {
-//            log.error("[토큰 재발급] 토큰이 일치하지 않아 재발급 불가.");
-//            log.error("[토큰 재발급] 기존 리프레시 : {}, 현재 리프레시 : {}", refreshToken, originRefreshToken);
-//
-//            throw new TokenException("토큰 불일치.");
-//        }
-//
-//        // access & refresh Token 재발급
-//        accessToken = jwtUtil.generateAccessToken(email);
-//        refreshToken = jwtUtil.generateRefreshToken(email);
-//
-//        // redis에 refreshToken 저장 필요
-//        // 회원의 이메일 아이디를 키로 저장
-//
-//        // 기존에 저장된 리프레시 토큰 삭제
-//        refreshTokenRepository.deleteById(email);
-//
-//        refreshTokenRepository.save(RefreshToken.builder()
-//                .email(email)
-//                .refreshToken(refreshToken)
-//                .expiration(JwtExpirationEnum.REFRESH_TOKEN_EXPIRATION_TIME.getValue() / 1000)
-//                .build());
-//
-//        return ReissueTokenResDto.builder()
-//                .accessToken(accessToken)
-//                .refreshToken(refreshToken)
-//                .build();
-//    }
-
     @Transactional
     @Override
     public void deleteUser(Long userId, String token) {
@@ -541,18 +557,53 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public List<FindPowerUsageHouseAvgResDto> findPowerUsageHouseAvgList(String metro, String city, Integer year, Integer month) {
+    public List<FindPowerUsageHouseAvgResDto> findPowerUsageHouseAvgList(Integer year, Integer month) {
         log.info("[회원의 주소 기반 가구평균 전력 사용량 조회] 조회 요청.");
-        CityCode cityCode = cityCodeRepository.findByMetroNameAndCityName(metro, city).orElseThrow(() -> new UserNotFoundException(UserExceptionMessage.ADDRESS_NOT_FOUND.getMessage()));
+        long userId = jwtUtil.getUserNo();
+        String address = userRepository.findById(userId).get().getAddress();
+        StringTokenizer st = new StringTokenizer(address);
+        String metro = st.nextToken();
+        String city = st.nextToken();
+        String city2 = st.nextToken();
+        log.info("metro----> {}", metro);
+        log.info("city----> {}", city);
+        if(city.charAt(city.length()-1) == '시') {
+            city = city + " " + city2;
+        }
+        Optional<CityCode> cityCode = cityCodeRepository.findByMetroNameAndCityName(MetroName.getConverted(metro), city);
+        if(!cityCode.isPresent()) throw new UserNotFoundException(UserExceptionMessage.ADDRESS_NOT_FOUND.getMessage());
         List<FindPowerUsageHouseAvgResDto> dtoList = new ArrayList<>();
         // 전 달 계산
         LocalDate last = null;
         // 년월으로 date
         LocalDate date = LocalDate.of(year, month, 1);
+        FindPowerUsageHouseAvgResDto dto;
+        float tmpPowerUsage = 0F;
+        int tmpBill = 0;
         for (int i = 4; i >= 0; i--) {
             last = date.minusMonths(i);
-            dtoList.add(kepcoAPIWebClient.findPowerUsageHouseAvg(last.getYear(), last.getMonthValue(), cityCode.getMetroCode().getMetroCode(), cityCode.getCityCode()));
-
+            if(last.getYear() == 2023 && last.getMonthValue() >= 9) {
+                dto = FindPowerUsageHouseAvgResDto.builder()
+                        .year(last.getYear())
+                        .month(last.getMonthValue())
+                        .powerUsage(null)
+                        .bill(null)
+                        .build();
+            }else {
+                dto = kepcoAPIWebClient.findPowerUsageHouseAvg(last.getYear(), last.getMonthValue(), cityCode.get().getMetroCode().getMetroCode(), cityCode.get().getCityCode());
+                if (tmpBill == 0 && dto.getBill() != null) {
+                    tmpPowerUsage = dto.getPowerUsage();
+                    tmpBill = dto.getBill();
+                }
+            }
+            dtoList.add(dto);
+        }
+        // 2023년 9, 10, 11월 데이터가 없음,,,
+        for (int i = 0; i <= 4; i++) {
+            if(dtoList.get(i).getPowerUsage() == null) {
+                dtoList.get(i).setPowerUsage(tmpPowerUsage + tmpPowerUsage / dtoList.get(i).getMonth());
+                dtoList.get(i).setBill(tmpBill + tmpBill / dtoList.get(i).getYear());
+            }
         }
         log.info("[회원의 주소 기반 가구평균 전력 사용량 조회] 조회 성공.");
         return dtoList;
@@ -592,14 +643,5 @@ public class UserServiceImpl implements UserService {
 
         log.info("[지로 코드 등록] 지로 코드 등록 완료. 메서드 종료!");
     }
-
-
-//    /**
-//     * 로그인 유저가 관리자 회원인지 확인합니다.
-//     * @param token
-//     */
-//    private Boolean checkAdmin(String token) {
-//
-//    }
 
 }
