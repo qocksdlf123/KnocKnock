@@ -12,6 +12,9 @@ import 'package:knocknock/widgets/app_bar_back.dart';
 import 'package:provider/provider.dart';
 import 'package:text_divider/text_divider.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+
+const storage = FlutterSecureStorage();
 
 class MyPage extends StatefulWidget {
   const MyPage({super.key});
@@ -24,11 +27,14 @@ class _MyPageState extends State<MyPage> {
   UserService userService = UserService();
   TextEditingController passwordController = TextEditingController();
   String today = '';
+  late Future<String> nickname;
+
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
     today = getToday();
+    nickname = getNickname();
   }
 
   String getToday() {
@@ -36,6 +42,12 @@ class _MyPageState extends State<MyPage> {
     DateFormat formatter = DateFormat('yyyy-MM-dd');
     today = formatter.format(now);
     return today;
+  }
+
+  Future<String> getNickname() async {
+    final nickname = await storage.read(key: "nickname");
+    print(nickname);
+    return nickname!;
   }
 
   onWasteInfoTap() async {
@@ -204,6 +216,35 @@ class _MyPageState extends State<MyPage> {
           mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: MainAxisSize.max,
           children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 30.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  FutureBuilder(
+                      future: nickname,
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.done &&
+                            snapshot.hasData) {
+                          return Text(
+                            '${snapshot.data!}님',
+                            style: const TextStyle(fontSize: 20),
+                          );
+                        }
+                        return const Text('나');
+                      }),
+                  const Text(
+                    '의 페이지 ',
+                  ),
+                  const Icon(Icons.electric_bolt_sharp),
+                ],
+              ),
+            ),
+            const Divider(
+              indent: 30,
+              endIndent: 30,
+            ),
             Flexible(
               flex: 3,
               child: Row(
@@ -212,7 +253,7 @@ class _MyPageState extends State<MyPage> {
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(15, 15, 10, 15),
                       child: Container(
-                        padding: const EdgeInsets.all(15),
+                        padding: const EdgeInsets.all(13),
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(15),
                           color: Theme.of(context).colorScheme.outlineVariant,
@@ -242,19 +283,23 @@ class _MyPageState extends State<MyPage> {
                             const Text(
                               '등록한 가전 수',
                               style: TextStyle(
-                                fontSize: 18,
                                 fontWeight: FontWeight.w800,
                               ),
                               textAlign: TextAlign.left,
                             ),
-                            Text(
-                              '${context.watch<RegisterAppliance>().qtt} 개',
-                              style: const TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.w300,
-                              ),
-                              textAlign: TextAlign.left,
-                            ),
+                            context.watch<RegisterAppliance>().qtt == 0
+                                ? const Text(
+                                    '\'내 가전\'을 \n확인해보세요!',
+                                    style: TextStyle(fontSize: 12),
+                                  )
+                                : Text(
+                                    '${context.watch<RegisterAppliance>().qtt} 개',
+                                    style: const TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w300,
+                                    ),
+                                    textAlign: TextAlign.left,
+                                  ),
                           ],
                         ),
                       ),
@@ -264,7 +309,7 @@ class _MyPageState extends State<MyPage> {
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(10, 15, 15, 15),
                       child: Container(
-                        padding: const EdgeInsets.all(15),
+                        padding: const EdgeInsets.all(13),
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(15),
                           color: Theme.of(context).colorScheme.outlineVariant,
@@ -294,7 +339,6 @@ class _MyPageState extends State<MyPage> {
                             const Text(
                               'Today is...',
                               style: TextStyle(
-                                fontSize: 18,
                                 fontWeight: FontWeight.w800,
                               ),
                               textAlign: TextAlign.left,
@@ -302,7 +346,7 @@ class _MyPageState extends State<MyPage> {
                             Text(
                               today,
                               style: const TextStyle(
-                                fontSize: 20,
+                                fontSize: 18,
                                 fontWeight: FontWeight.w300,
                               ),
                               textAlign: TextAlign.left,
@@ -316,7 +360,7 @@ class _MyPageState extends State<MyPage> {
               ),
             ),
             const SizedBox(
-              height: 20,
+              height: 30,
             ),
             const TextDivider(
               text: Text('Services'),
@@ -327,57 +371,7 @@ class _MyPageState extends State<MyPage> {
               flex: 2,
               child: Padding(
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 15.0, vertical: 15),
-                child: GestureDetector(
-                  onTap: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => const ManageAppliances(),
-                      ),
-                    );
-                  },
-                  child: Container(
-                    // height: 100,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(15),
-                      color: Theme.of(context).colorScheme.outlineVariant,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .shadow
-                              .withOpacity(0.5),
-                          spreadRadius: 1,
-                          blurRadius: 1,
-                          offset: const Offset(-2, 2),
-                        ),
-                        BoxShadow(
-                          color: Theme.of(context).colorScheme.surfaceVariant,
-                          spreadRadius: 1,
-                          blurRadius: 1,
-                          offset: const Offset(2, -2),
-                        ),
-                      ],
-                    ),
-                    child: ListTile(
-                      leading: Image.asset(
-                        'assets/images/appliance.png',
-                        width: 40,
-                      ),
-                      title: const Text('가전 서비스'),
-                      trailing: const Icon(Icons.chevron_right_rounded),
-                      titleAlignment: ListTileTitleAlignment.center,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            Flexible(
-              flex: 2,
-              child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 15.0, vertical: 15),
+                    const EdgeInsets.symmetric(horizontal: 15.0, vertical: 13),
                 child: GestureDetector(
                   onTap: onAverageElectronTap,
                   child: Container(
@@ -424,7 +418,7 @@ class _MyPageState extends State<MyPage> {
               flex: 2,
               child: Padding(
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 15.0, vertical: 15),
+                    const EdgeInsets.symmetric(horizontal: 15.0, vertical: 13),
                 child: GestureDetector(
                   onTap: onWasteInfoTap,
                   child: Container(
@@ -465,7 +459,7 @@ class _MyPageState extends State<MyPage> {
               ),
             ),
             const SizedBox(
-              height: 20,
+              height: 30,
             ),
             const TextDivider(
               text: Text('My'),
@@ -476,7 +470,7 @@ class _MyPageState extends State<MyPage> {
               flex: 2,
               child: Padding(
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 15.0, vertical: 15),
+                    const EdgeInsets.symmetric(horizontal: 15.0, vertical: 13),
                 child: GestureDetector(
                   onTap: onMyInfoModifyTextPressed,
                   child: Container(
@@ -519,7 +513,7 @@ class _MyPageState extends State<MyPage> {
               flex: 2,
               child: Padding(
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 15.0, vertical: 15),
+                    const EdgeInsets.symmetric(horizontal: 15.0, vertical: 13),
                 child: GestureDetector(
                   onTap: onLogoutTextPressed,
                   child: Container(
