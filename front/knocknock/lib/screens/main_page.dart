@@ -139,31 +139,38 @@ class _MainPageState extends State<MainPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       body: Stack(
         children: [
-          _controller != null && _controller!.value.isInitialized
-              ? SizedBox.expand(
-                  child: FittedBox(
-                    fit: BoxFit.cover,
-                    child: SizedBox(
-                      width: _controller!.value.size.width,
-                      height: _controller!.value.size.height,
-                      child: VideoPlayer(_controller!),
+          Positioned(
+            // top: 0,
+            // left: 0,
+            // right: 0,
+            // bottom: 1,
+            child: _controller != null && _controller!.value.isInitialized
+                ? SizedBox.expand(
+                    child: FittedBox(
+                      fit: BoxFit.none,
+                      child: SizedBox(
+                        width: _controller!.value.size.width,
+                        height: _controller!.value.size.height,
+                        child: VideoPlayer(_controller!),
+                      ),
                     ),
-                  ),
-                )
-              : Container(),
+                  )
+                : Container(),
+          ),
           Positioned.fill(
-              child: Container(
-            color: Theme.of(context).colorScheme.background.withOpacity(0.35),
-          )),
-          Column(
-            mainAxisSize: MainAxisSize.min, // 이 부분을 추가해주세요.
+            child: Container(
+              color: Theme.of(context).colorScheme.background.withOpacity(0.35),
+            ),
+          ),
+          SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min, // 이 부분을 추가해주세요.
 
-            children: [
-              Flexible(
-                flex: 2,
-                child: Column(
+              children: [
+                Column(
                   children: [
                     Container(
                       height: MediaQuery.of(context).size.height * 0.15,
@@ -233,89 +240,91 @@ class _MainPageState extends State<MainPage> {
                     ),
                   ],
                 ),
-              ),
-              Flexible(
-                flex: 1,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    Text(
-                      '녹색 제품 검색',
-                      style: TextStyle(
-                        fontSize: 27,
-                        fontWeight: FontWeight.w600,
-                        color: Theme.of(context)
-                            .colorScheme
-                            .onBackground
-                            .withOpacity(0.95),
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 60,
-                      ),
-                      child: TextFormField(
-                        controller: keywordController,
-                        decoration: InputDecoration(
-                          contentPadding: const EdgeInsets.symmetric(
-                              vertical: 10, horizontal: 20),
-                          isDense: true,
-                          hintText: '검색어를 입력하세요',
-                          hintStyle: const TextStyle(
-                            fontWeight: FontWeight.w300,
-                          ),
-                          suffixIcon: IconButton(
-                            onPressed: onSerchButtonTap,
-                            icon: const Icon(Icons.search),
-                          ),
-                          filled: true,
-                          fillColor:
-                              Theme.of(context).colorScheme.surfaceVariant,
-                          focusedBorder: OutlineInputBorder(
-                            borderSide: BorderSide(
-                                color: Theme.of(context).colorScheme.primary),
-                            borderRadius: BorderRadius.circular(30),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderSide:
-                                const BorderSide(color: Colors.transparent),
-                            borderRadius: BorderRadius.circular(30),
-                          ),
+                SizedBox(
+                  height: MediaQuery.of(context).size.height * 0.3,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      Text(
+                        '녹색 제품 검색',
+                        style: TextStyle(
+                          fontSize: 27,
+                          fontWeight: FontWeight.w600,
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onBackground
+                              .withOpacity(0.95),
                         ),
-                        validator: (String? value) {
-                          return (value == null) ? '값을 입력하세요' : null;
-                        },
+                        textAlign: TextAlign.center,
                       ),
-                    ),
-                    const Divider(
-                      thickness: 1.2,
-                      indent: 50,
-                      endIndent: 50,
-                    ),
-                  ],
-                ),
-              ),
-              Flexible(
-                flex: 1,
-                child: Center(
-                  child: KnockButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => const ManageAppliances()),
-                      );
-                    },
-                    bColor: Theme.of(context).colorScheme.secondaryContainer,
-                    fColor: Theme.of(context).colorScheme.onSecondaryContainer,
-                    width: MediaQuery.of(context).size.width * 0.8, // 버튼의 너비
-                    height: MediaQuery.of(context).size.width * 0.16, // 버튼의 높이
-                    label: "내 가전 관리하기", // 버튼에 표시할 텍스트
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 60,
+                        ),
+                        child: TextFormField(
+                          controller: keywordController,
+                          decoration: InputDecoration(
+                            contentPadding: const EdgeInsets.symmetric(
+                                vertical: 10, horizontal: 20),
+                            isDense: true,
+                            hintText: '검색어를 입력하세요',
+                            hintStyle: const TextStyle(
+                              fontWeight: FontWeight.w300,
+                            ),
+                            suffixIcon: IconButton(
+                              onPressed: onSerchButtonTap,
+                              icon: const Icon(Icons.search),
+                            ),
+                            filled: true,
+                            fillColor:
+                                Theme.of(context).colorScheme.surfaceVariant,
+                            focusedBorder: OutlineInputBorder(
+                              borderSide: BorderSide(
+                                  color: Theme.of(context).colorScheme.primary),
+                              borderRadius: BorderRadius.circular(30),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderSide:
+                                  const BorderSide(color: Colors.transparent),
+                              borderRadius: BorderRadius.circular(30),
+                            ),
+                          ),
+                          validator: (String? value) {
+                            return (value == null) ? '값을 입력하세요' : null;
+                          },
+                        ),
+                      ),
+                      const Divider(
+                        thickness: 1.2,
+                        indent: 50,
+                        endIndent: 50,
+                      ),
+                    ],
                   ),
                 ),
-              ),
-            ],
+                SizedBox(
+                  height: MediaQuery.of(context).size.height * 0.2,
+                  child: Center(
+                    child: KnockButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => const ManageAppliances()),
+                        );
+                      },
+                      bColor: Theme.of(context).colorScheme.secondaryContainer,
+                      fColor:
+                          Theme.of(context).colorScheme.onSecondaryContainer,
+                      width: MediaQuery.of(context).size.width * 0.8, // 버튼의 너비
+                      height:
+                          MediaQuery.of(context).size.width * 0.16, // 버튼의 높이
+                      label: "내 가전 관리하기", // 버튼에 표시할 텍스트
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
