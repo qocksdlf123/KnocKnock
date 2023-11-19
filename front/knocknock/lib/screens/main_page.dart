@@ -300,12 +300,10 @@ class _MainPageState extends State<MainPage> {
                 flex: 1,
                 child: Center(
                   child: KnockButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => const ManageAppliances()),
-                      );
+                    onPressed: () async {
+                      final Uri url = Uri.parse(
+                          'https://eep.energy.or.kr/business_introduction/effi_summary.aspx');
+                      await launchUrl(url);
                     },
                     bColor: Theme.of(context).colorScheme.secondaryContainer,
                     fColor: Theme.of(context).colorScheme.onSecondaryContainer,
