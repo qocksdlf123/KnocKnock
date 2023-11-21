@@ -278,4 +278,9 @@ class _DisplayInfoScreenState extends State<DisplayInfoScreen> {
       ),
     );
   }
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
 }

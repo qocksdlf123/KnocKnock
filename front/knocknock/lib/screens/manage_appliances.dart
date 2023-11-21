@@ -108,4 +108,9 @@ class _ManageAppliancesState extends State<ManageAppliances> {
       ),
     );
   }
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
 }

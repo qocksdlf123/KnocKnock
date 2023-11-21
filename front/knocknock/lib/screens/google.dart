@@ -20,4 +20,9 @@ class _GoogleState extends State<Google> {
       ),
     );
   }
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
 }

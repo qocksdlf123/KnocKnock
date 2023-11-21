@@ -157,4 +157,9 @@ class _NewApplianceCategoriesState extends State<NewApplianceCategories> {
       ),
     );
   }
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
 }

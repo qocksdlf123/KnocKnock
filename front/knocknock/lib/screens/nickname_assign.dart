@@ -217,4 +217,10 @@ class _NicknameAssignState extends State<NicknameAssign> {
       ),
     );
   }
+
+  @override
+  void dispose() {
+    myController.dispose();
+    super.dispose();
+  }
 }

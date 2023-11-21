@@ -610,4 +610,13 @@ class _LoginState extends State<Login> {
       ),
     );
   }
+
+  @override
+  void dispose() {
+    emailController.dispose();
+    passwordController.dispose();
+    emailController2.dispose();
+    nicknameController.dispose();
+    super.dispose();
+  }
 }

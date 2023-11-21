@@ -210,4 +210,9 @@ class _CompareListState extends State<CompareList> {
       ),
     );
   }
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
 }

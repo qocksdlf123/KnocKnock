@@ -591,4 +591,9 @@ class _CompareState extends State<Compare> {
       ),
     );
   }
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
 }

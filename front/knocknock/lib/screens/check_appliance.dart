@@ -103,4 +103,9 @@ class _CheckApplianceState extends State<CheckAppliance> {
       ),
     );
   }
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
 }

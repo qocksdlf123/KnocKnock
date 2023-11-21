@@ -710,4 +710,15 @@ class _SignupState extends State<Signup> {
       ),
     );
   }
+
+  @override
+  void dispose() {
+    emailController.dispose();
+    verificationController.dispose();
+    passwordController.dispose();
+    passwordConfirmController.dispose();
+    nicknameController.dispose();
+    addressController.dispose();
+    super.dispose();
+  }
 }

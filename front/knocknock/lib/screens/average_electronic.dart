@@ -308,4 +308,9 @@ class _AverageElectronicState extends State<AverageElectronic> {
       ),
     );
   }
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
 }

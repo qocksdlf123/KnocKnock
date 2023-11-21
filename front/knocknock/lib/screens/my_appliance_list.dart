@@ -368,4 +368,9 @@ class _MyApplianceListState extends State<MyApplianceList> {
       ),
     );
   }
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
 }

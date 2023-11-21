@@ -203,113 +203,189 @@ class _MyPageState extends State<MyPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       appBar: AppBarBack(
         title: '',
         isLeadingNeeded: false,
       ),
-      body: Padding(
-        padding: const EdgeInsets.symmetric(
-          vertical: 20.0,
-          horizontal: 30,
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.max,
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 30.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.start,
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  FutureBuilder(
-                      future: nickname,
-                      builder: (context, snapshot) {
-                        if (snapshot.connectionState == ConnectionState.done &&
-                            snapshot.hasData) {
-                          return Text(
-                            '${snapshot.data!}님',
-                            style: const TextStyle(fontSize: 20),
-                          );
-                        }
-                        return const Text('나');
-                      }),
-                  const Text(
-                    '의 페이지 ',
-                  ),
-                  const Icon(Icons.electric_bolt_sharp),
-                ],
+      body: SingleChildScrollView(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height,
+          ),
+          child: IntrinsicHeight(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                vertical: 20.0,
+                horizontal: 30,
               ),
-            ),
-            const Divider(
-              indent: 30,
-              endIndent: 30,
-            ),
-            Flexible(
-              flex: 3,
-              child: Row(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.max,
                 children: [
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(15, 15, 10, 15),
-                      child: Container(
-                        padding: const EdgeInsets.all(13),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(15),
-                          color: Theme.of(context).colorScheme.outlineVariant,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .shadow
-                                  .withOpacity(0.5),
-                              spreadRadius: 1,
-                              blurRadius: 1,
-                              offset: const Offset(-2, 2),
-                            ),
-                            BoxShadow(
-                              color:
-                                  Theme.of(context).colorScheme.surfaceVariant,
-                              spreadRadius: 1,
-                              blurRadius: 1,
-                              offset: const Offset(2, -2),
-                            ),
-                          ],
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 30.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        FutureBuilder(
+                            future: nickname,
+                            builder: (context, snapshot) {
+                              if (snapshot.connectionState ==
+                                      ConnectionState.done &&
+                                  snapshot.hasData) {
+                                return Text(
+                                  '${snapshot.data!}님',
+                                  style: const TextStyle(fontSize: 20),
+                                );
+                              }
+                              return const Text('나');
+                            }),
+                        const Text(
+                          '의 페이지 ',
                         ),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              '등록한 가전 수',
-                              style: TextStyle(
-                                fontWeight: FontWeight.w800,
-                              ),
-                              textAlign: TextAlign.left,
+                        const Icon(Icons.electric_bolt_sharp),
+                      ],
+                    ),
+                  ),
+                  const Divider(
+                    indent: 30,
+                    endIndent: 30,
+                  ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(15, 15, 10, 15),
+                          child: Container(
+                            height: 150,
+                            padding: const EdgeInsets.all(13),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(15),
+                              color:
+                                  Theme.of(context).colorScheme.outlineVariant,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .shadow
+                                      .withOpacity(0.5),
+                                  spreadRadius: 1,
+                                  blurRadius: 1,
+                                  offset: const Offset(-2, 2),
+                                ),
+                                BoxShadow(
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .surfaceVariant,
+                                  spreadRadius: 1,
+                                  blurRadius: 1,
+                                  offset: const Offset(2, -2),
+                                ),
+                              ],
                             ),
-                            context.watch<RegisterAppliance>().qtt == 0
-                                ? const Text(
-                                    '\'내 가전\'을 \n확인해보세요!',
-                                    style: TextStyle(fontSize: 12),
-                                  )
-                                : Text(
-                                    '${context.watch<RegisterAppliance>().qtt} 개',
-                                    style: const TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.w300,
-                                    ),
-                                    textAlign: TextAlign.left,
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  '등록한 가전 수',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w800,
                                   ),
-                          ],
+                                  textAlign: TextAlign.left,
+                                ),
+                                context.watch<RegisterAppliance>().qtt == 0
+                                    ? const Text(
+                                        '\'내 가전\'을 \n확인해보세요!',
+                                        style: TextStyle(fontSize: 12),
+                                      )
+                                    : Text(
+                                        '${context.watch<RegisterAppliance>().qtt} 개',
+                                        style: const TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.w300,
+                                        ),
+                                        textAlign: TextAlign.left,
+                                      ),
+                              ],
+                            ),
+                          ),
                         ),
                       ),
-                    ),
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(10, 15, 15, 15),
+                          child: Container(
+                            height: 150,
+                            padding: const EdgeInsets.all(13),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(15),
+                              color:
+                                  Theme.of(context).colorScheme.outlineVariant,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .shadow
+                                      .withOpacity(0.5),
+                                  spreadRadius: 1,
+                                  blurRadius: 1,
+                                  offset: const Offset(-2, 2),
+                                ),
+                                BoxShadow(
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .surfaceVariant,
+                                  spreadRadius: 1,
+                                  blurRadius: 1,
+                                  offset: const Offset(2, -2),
+                                ),
+                              ],
+                            ),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'Today is...',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                  textAlign: TextAlign.left,
+                                ),
+                                Text(
+                                  today,
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w300,
+                                  ),
+                                  textAlign: TextAlign.left,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(10, 15, 15, 15),
+                  const SizedBox(
+                    height: 30,
+                  ),
+                  const TextDivider(
+                    text: Text('Services'),
+                    indent: 20,
+                    endIndent: 20,
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 15.0, vertical: 13),
+                    child: GestureDetector(
+                      onTap: onAverageElectronTap,
                       child: Container(
-                        padding: const EdgeInsets.all(13),
+                        height: 80,
+                        alignment: Alignment.center,
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(15),
                           color: Theme.of(context).colorScheme.outlineVariant,
@@ -319,8 +395,8 @@ class _MyPageState extends State<MyPage> {
                                   .colorScheme
                                   .shadow
                                   .withOpacity(0.5),
-                              spreadRadius: 1,
-                              blurRadius: 1,
+                              spreadRadius: 2,
+                              blurRadius: 3,
                               offset: const Offset(-2, 2),
                             ),
                             BoxShadow(
@@ -332,26 +408,156 @@ class _MyPageState extends State<MyPage> {
                             ),
                           ],
                         ),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Today is...',
-                              style: TextStyle(
-                                fontWeight: FontWeight.w800,
-                              ),
-                              textAlign: TextAlign.left,
+                        child: ListTile(
+                          leading: Padding(
+                            padding: const EdgeInsets.all(5.0),
+                            child: Image.asset(
+                              'assets/images/electric.png',
+                              width: 30,
                             ),
-                            Text(
-                              today,
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w300,
+                          ),
+                          title: const Text('우리 동네 전력 소비'),
+                          trailing: const Icon(Icons.chevron_right_rounded),
+                          titleAlignment: ListTileTitleAlignment.center,
+                        ),
+                      ),
+                    ),
+                  ),
+                  Flexible(
+                    flex: 2,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 15.0, vertical: 13),
+                      child: GestureDetector(
+                        onTap: onWasteInfoTap,
+                        child: Container(
+                          height: 80,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(15),
+                            color: Theme.of(context).colorScheme.outlineVariant,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .shadow
+                                    .withOpacity(0.5),
+                                spreadRadius: 2,
+                                blurRadius: 3,
+                                offset: const Offset(-2, 2),
                               ),
-                              textAlign: TextAlign.left,
+                              BoxShadow(
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .surfaceVariant,
+                                spreadRadius: 1,
+                                blurRadius: 1,
+                                offset: const Offset(2, -2),
+                              ),
+                            ],
+                          ),
+                          child: ListTile(
+                            leading: Image.asset(
+                              'assets/images/recycle.png',
+                              width: 40,
+                            ),
+                            title: const Text('폐가전 수거 정보'),
+                            trailing: const Icon(Icons.chevron_right_rounded),
+                            titleAlignment: ListTileTitleAlignment.center,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(
+                    height: 30,
+                  ),
+                  const TextDivider(
+                    text: Text('My'),
+                    indent: 20,
+                    endIndent: 20,
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 15.0, vertical: 13),
+                    child: GestureDetector(
+                      onTap: onMyInfoModifyTextPressed,
+                      child: Container(
+                        height: 80,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(15),
+                          color: Theme.of(context).colorScheme.outlineVariant,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .shadow
+                                  .withOpacity(0.5),
+                              spreadRadius: 2,
+                              blurRadius: 3,
+                              offset: const Offset(-2, 2),
+                            ),
+                            BoxShadow(
+                              color:
+                                  Theme.of(context).colorScheme.surfaceVariant,
+                              spreadRadius: 1,
+                              blurRadius: 1,
+                              offset: const Offset(2, -2),
                             ),
                           ],
+                        ),
+                        child: const ListTile(
+                          leading: Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 5.0),
+                            child: Icon(Icons.person),
+                          ),
+                          title: Text('내 정보 수정'),
+                          trailing: Icon(Icons.chevron_right_rounded),
+                          titleAlignment: ListTileTitleAlignment.center,
+                        ),
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 15.0, vertical: 13),
+                    child: GestureDetector(
+                      onTap: onLogoutTextPressed,
+                      child: Container(
+                        height: 80,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(15),
+                          color: Theme.of(context).colorScheme.outlineVariant,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .shadow
+                                  .withOpacity(0.5),
+                              spreadRadius: 2,
+                              blurRadius: 3,
+                              offset: const Offset(-2, 2),
+                            ),
+                            BoxShadow(
+                              color:
+                                  Theme.of(context).colorScheme.surfaceVariant,
+                              spreadRadius: 1,
+                              blurRadius: 1,
+                              offset: const Offset(2, -2),
+                            ),
+                          ],
+                        ),
+                        child: const ListTile(
+                          leading: Padding(
+                            padding: EdgeInsets.symmetric(
+                                horizontal: 5.0, vertical: 13),
+                            child: Icon(Icons.logout),
+                          ),
+                          title: Text('로그아웃'),
+                          trailing: Icon(Icons.chevron_right_rounded),
+                          titleAlignment: ListTileTitleAlignment.center,
                         ),
                       ),
                     ),
@@ -359,203 +565,15 @@ class _MyPageState extends State<MyPage> {
                 ],
               ),
             ),
-            const SizedBox(
-              height: 30,
-            ),
-            const TextDivider(
-              text: Text('Services'),
-              indent: 20,
-              endIndent: 20,
-            ),
-            Flexible(
-              flex: 2,
-              child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 15.0, vertical: 13),
-                child: GestureDetector(
-                  onTap: onAverageElectronTap,
-                  child: Container(
-                    // height: 100,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(15),
-                      color: Theme.of(context).colorScheme.outlineVariant,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .shadow
-                              .withOpacity(0.5),
-                          spreadRadius: 2,
-                          blurRadius: 3,
-                          offset: const Offset(-2, 2),
-                        ),
-                        BoxShadow(
-                          color: Theme.of(context).colorScheme.surfaceVariant,
-                          spreadRadius: 1,
-                          blurRadius: 1,
-                          offset: const Offset(2, -2),
-                        ),
-                      ],
-                    ),
-                    child: ListTile(
-                      leading: Padding(
-                        padding: const EdgeInsets.all(5.0),
-                        child: Image.asset(
-                          'assets/images/electric.png',
-                          width: 30,
-                        ),
-                      ),
-                      title: const Text('우리 동네 전력 소비'),
-                      trailing: const Icon(Icons.chevron_right_rounded),
-                      titleAlignment: ListTileTitleAlignment.center,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            Flexible(
-              flex: 2,
-              child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 15.0, vertical: 13),
-                child: GestureDetector(
-                  onTap: onWasteInfoTap,
-                  child: Container(
-                    // height: 100,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(15),
-                      color: Theme.of(context).colorScheme.outlineVariant,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .shadow
-                              .withOpacity(0.5),
-                          spreadRadius: 2,
-                          blurRadius: 3,
-                          offset: const Offset(-2, 2),
-                        ),
-                        BoxShadow(
-                          color: Theme.of(context).colorScheme.surfaceVariant,
-                          spreadRadius: 1,
-                          blurRadius: 1,
-                          offset: const Offset(2, -2),
-                        ),
-                      ],
-                    ),
-                    child: ListTile(
-                      leading: Image.asset(
-                        'assets/images/recycle.png',
-                        width: 40,
-                      ),
-                      title: const Text('폐가전 수거 정보'),
-                      trailing: const Icon(Icons.chevron_right_rounded),
-                      titleAlignment: ListTileTitleAlignment.center,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(
-              height: 30,
-            ),
-            const TextDivider(
-              text: Text('My'),
-              indent: 20,
-              endIndent: 20,
-            ),
-            Flexible(
-              flex: 2,
-              child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 15.0, vertical: 13),
-                child: GestureDetector(
-                  onTap: onMyInfoModifyTextPressed,
-                  child: Container(
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(15),
-                      color: Theme.of(context).colorScheme.outlineVariant,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .shadow
-                              .withOpacity(0.5),
-                          spreadRadius: 2,
-                          blurRadius: 3,
-                          offset: const Offset(-2, 2),
-                        ),
-                        BoxShadow(
-                          color: Theme.of(context).colorScheme.surfaceVariant,
-                          spreadRadius: 1,
-                          blurRadius: 1,
-                          offset: const Offset(2, -2),
-                        ),
-                      ],
-                    ),
-                    child: const ListTile(
-                      leading: Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 5.0),
-                        child: Icon(Icons.person),
-                      ),
-                      title: Text('내 정보 수정'),
-                      trailing: Icon(Icons.chevron_right_rounded),
-                      titleAlignment: ListTileTitleAlignment.center,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            Flexible(
-              flex: 2,
-              child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 15.0, vertical: 13),
-                child: GestureDetector(
-                  onTap: onLogoutTextPressed,
-                  child: Container(
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(15),
-                      color: Theme.of(context).colorScheme.outlineVariant,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .shadow
-                              .withOpacity(0.5),
-                          spreadRadius: 2,
-                          blurRadius: 3,
-                          offset: const Offset(-2, 2),
-                        ),
-                        BoxShadow(
-                          color: Theme.of(context).colorScheme.surfaceVariant,
-                          spreadRadius: 1,
-                          blurRadius: 1,
-                          offset: const Offset(2, -2),
-                        ),
-                      ],
-                    ),
-                    child: const ListTile(
-                      leading: Padding(
-                        padding:
-                            EdgeInsets.symmetric(horizontal: 5.0, vertical: 13),
-                        child: Icon(Icons.logout),
-                      ),
-                      title: Text('로그아웃'),
-                      trailing: Icon(Icons.chevron_right_rounded),
-                      titleAlignment: ListTileTitleAlignment.center,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    passwordController.dispose();
+    super.dispose();
   }
 }

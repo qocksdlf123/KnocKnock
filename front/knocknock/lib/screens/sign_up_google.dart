@@ -446,4 +446,14 @@ class _SingUpGoogleState extends State<SingUpGoogle> {
       ),
     );
   }
+
+  @override
+  void dispose() {
+    emailController.dispose();
+    passwordController.dispose();
+    passwordConfirmController.dispose();
+    nicknameController.dispose();
+    addressController.dispose();
+    super.dispose();
+  }
 }

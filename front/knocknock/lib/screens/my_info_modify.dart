@@ -468,4 +468,15 @@ class _MyInfoModifyState extends State<MyInfoModify> {
       ),
     );
   }
+
+  @override
+  void dispose() {
+    emailController.dispose();
+    oldPasswordController.dispose();
+    newPasswordController.dispose();
+    checkPasswordController.dispose();
+    nicknameController.dispose();
+    addressController.dispose();
+    super.dispose();
+  }
 }

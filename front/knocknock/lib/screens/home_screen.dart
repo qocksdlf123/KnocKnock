@@ -40,9 +40,19 @@ class _HomeScreenState extends State<HomeScreen> {
   NavigationDestinationLabelBehavior labelBehavior =
       NavigationDestinationLabelBehavior.alwaysShow;
   late CameraDescription firstCamera;
+  // Future<void> loadCam() async {
+  //   final cameras = await availableCameras();
+  //   firstCamera = cameras.first;
+  // }
+
+  static List<CameraDescription> _cameras = [];
   Future<void> loadCam() async {
-    final cameras = await availableCameras();
-    firstCamera = cameras.first;
+    // 이미 생성된 카메라 인스턴스가 있는지 확인
+    if (_cameras.isEmpty) {
+      // 카메라 인스턴스가 없다면 새로 로드
+      _cameras = await availableCameras();
+    }
+    firstCamera = _cameras.first;
   }
 
   @override
@@ -77,10 +87,16 @@ class _HomeScreenState extends State<HomeScreen> {
           const MainPage(),
           const NewApplianceCategories(),
           FutureBuilder(
-              future: loadCam(),
-              builder: (context, snapshot) {
-                return TakePictureScreen(camera: firstCamera);
-              }),
+            future: _initCameraFuture,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.done) {
+                return TakePictureScreen(
+                    camera: firstCamera); // firstCamera가 준비되었을 때만 접근
+              } else {
+                return const CircularProgressIndicator(); // 로딩 중 표시
+              }
+            },
+          ),
           const MyLists(),
           const MyPage(),
         ][currentPageIndex]);
@@ -104,5 +120,10 @@ class _HomeScreenState extends State<HomeScreen> {
     //   ],
     // ),
     // );
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
   }
 }

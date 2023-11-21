@@ -193,4 +193,10 @@ class _ViewGreenProductsState extends State<ViewGreenProducts> {
       ),
     );
   }
+
+  @override
+  void dispose() {
+    keywordController.dispose();
+    super.dispose();
+  }
 }

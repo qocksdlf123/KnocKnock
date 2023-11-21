@@ -467,4 +467,9 @@ class _MyApplianceDetailState extends State<MyApplianceDetail> {
       ),
     );
   }
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
 }

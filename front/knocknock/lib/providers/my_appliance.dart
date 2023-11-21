@@ -29,4 +29,11 @@ class RegisterAppliance with ChangeNotifier {
   void setQtt(int qtt) {
     _qtt = qtt;
   }
+
+  @override
+  void dispose() {
+    // 여기에 리소스 정리 코드 추가
+    _myModel = null; // _myModel이나 다른 리소스를 해제하는 코드 추가
+    super.dispose();
+  }
 }

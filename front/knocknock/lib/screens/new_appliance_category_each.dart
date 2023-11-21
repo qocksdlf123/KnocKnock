@@ -559,4 +559,10 @@ class _NewApplianceCategoryEachState extends State<NewApplianceCategoryEach> {
       ),
     );
   }
+
+  @override
+  void dispose() {
+    keywordController.dispose();
+    super.dispose();
+  }
 }

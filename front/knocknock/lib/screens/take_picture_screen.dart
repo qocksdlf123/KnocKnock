@@ -352,7 +352,7 @@ import 'package:animated_text_kit/animated_text_kit.dart';
 // }
 
 class TakePictureScreen extends StatefulWidget {
-  const TakePictureScreen({super.key, required this.camera});
+  const TakePictureScreen({Key? key, required this.camera}) : super(key: key);
 
   final CameraDescription camera;
 

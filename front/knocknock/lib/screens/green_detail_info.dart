@@ -124,4 +124,9 @@ class _GreenDetailInfoState extends State<GreenDetailInfo> {
       ),
     );
   }
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
 }

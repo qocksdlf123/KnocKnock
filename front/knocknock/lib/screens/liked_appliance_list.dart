@@ -344,4 +344,9 @@ class _LikedApplianceListState extends State<LikedApplianceList> {
       ),
     );
   }
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
 }

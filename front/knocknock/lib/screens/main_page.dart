@@ -9,6 +9,7 @@ import 'package:knocknock/services/outer_service.dart' hide storage;
 import 'package:knocknock/services/user_service.dart' hide storage;
 import 'package:knocknock/widgets/cai_info.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:video_player/video_player.dart';
 import 'package:flutter_inner_shadow/flutter_inner_shadow.dart';
 
@@ -306,12 +307,10 @@ class _MainPageState extends State<MainPage> {
                   height: MediaQuery.of(context).size.height * 0.2,
                   child: Center(
                     child: KnockButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => const ManageAppliances()),
-                        );
+                      onPressed: () async {
+                        final Uri url = Uri.parse(
+                            'https://eep.energy.or.kr/business_introduction/effi_summary.aspx');
+                        await launchUrl(url);
                       },
                       bColor: Theme.of(context).colorScheme.secondaryContainer,
                       fColor:
@@ -319,7 +318,7 @@ class _MainPageState extends State<MainPage> {
                       width: MediaQuery.of(context).size.width * 0.8, // 버튼의 너비
                       height:
                           MediaQuery.of(context).size.width * 0.16, // 버튼의 높이
-                      label: "내 가전 관리하기", // 버튼에 표시할 텍스트
+                      label: "효율등급제도 자세히 알기 🔗", // 버튼에 표시할 텍스트
                     ),
                   ),
                 ),
