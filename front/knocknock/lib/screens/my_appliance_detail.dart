@@ -442,12 +442,7 @@ class _MyApplianceDetailState extends State<MyApplianceDetail> {
                       onPressed: () {
                         context.read<CurrentPageIndex>().move(1);
 
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) =>
-                                  const HomeScreen()), // SignUpPage는 회원가입 페이지 위젯입니다.
-                        );
+                        Navigator.popUntil(context, (route) => route.isFirst);
                       },
                       bColor: Theme.of(context).colorScheme.secondaryContainer,
                       fColor:

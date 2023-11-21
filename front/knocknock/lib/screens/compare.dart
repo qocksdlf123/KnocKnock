@@ -546,11 +546,13 @@ class _CompareState extends State<Compare> {
                             child: IconButton.filledTonal(
                               onPressed: () {
                                 context.read<CurrentPageIndex>().move(0);
-                                Navigator.pushReplacement(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) => const HomeScreen()),
-                                );
+                                Navigator.popUntil(
+                                    context, (route) => route.isFirst);
+                                // Navigator.pushReplacement(
+                                //   context,
+                                //   MaterialPageRoute(
+                                //       builder: (context) => const HomeScreen()),
+                                // );
                               },
                               icon: Icon(
                                 Icons.home,
